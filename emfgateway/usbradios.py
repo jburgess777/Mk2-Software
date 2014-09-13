@@ -68,12 +68,14 @@ class UsbRadios:
                 result = self._readLine(radio_id)
                 sys.exit(1)
             self.logger.info("Reading information for %s", information['path'])
-            self._send(radio_id, "ATZD3\r\n")
-            self._readLine(radio_id)
+            # Not supported by released radio firmware
+            #self._send(radio_id, "ATZD3\r\n")
+            #self._readLine(radio_id)
             self._send(radio_id, "ATVR\r\n")
             information['firmware'] = self._readLine(radio_id)
             self.logger.info("Firmware: %s", information['firmware'])
             self._send(radio_id, "ATDN\r\n")
+            self._readLine(radio_id)
 
     def sendPacket(self, radio_id, packet):
         if radio_id == 1:
@@ -128,7 +130,16 @@ class UsbRadios:
         serial_connection = self.serial_connections[radio_id]
         data = b""
         is_valid_packet = False
+        end = 0
         while not is_valid_packet:
             data = data + serial_connection.read(1)
-            is_valid_packet = (len(data) > 5) and self.packet_regex.match(data[-5:])
+            #is_valid_packet = (len(data) > 5) and self.packet_regex.match(data[-5:])
+            # released radio firmware doesn't do RSSI output,
+            # accumulate data for 1s after reception of first byte
+            # works OK with only a single badge
+            if (end == 0) and (len(data) > 0):
+                end = time.time() + 1
+            else:
+                is_valid_packet = (end > 0) and (time.time() >= end)
+
         return data
