@@ -4,6 +4,7 @@ import logging
 import serial
 import time
 import re
+import os
 
 
 class MockUsbRadios:
@@ -39,6 +40,9 @@ class UsbRadios:
         # Find all radio mount points
         bashFoo = "ls /dev/ttyACM* | xargs -IPATH sh -c \"udevadm info --query=all --name=PATH | grep -q 'ID_MODEL_ID=16a6' && echo PATH\"; true"
         self.serial_devices = subprocess.check_output(bashFoo, shell=True).strip().split('\n')
+        # Add Slice Of Radio
+        if os.path.exists('/dev/ttyAMA0'):
+            self.serial_devices.append('/dev/ttyAMA0')
 
         # Regex that matches a packet
         self.packet_regex = re.compile(r'\|-\d{3}')
@@ -48,18 +52,21 @@ class UsbRadios:
         self.serial_connections = []
         self.packets_send = []
         for serialPath in self.serial_devices:
-            self.logger.info("Found USB radio: %s", serialPath)
-            self.serial_connections.append(serial.Serial(serialPath, 115200, timeout=0.1))
+            if serialPath.startswith("/dev/ttyAMA"):
+                speed = 9600
+            else:
+                speed = 115200
+            self.logger.info("Found radio: %s, speed %d", serialPath, speed)
+            self.serial_connections.append(serial.Serial(serialPath, speed, timeout=0.1))
             self.radio_information.append({"path": serialPath})
             self.packets_send.append(0)
 
         # Collect information about the radios
         self.logger.info("Entering AT mode...")
+
         for radio_id, information in enumerate(self.radio_information):
             self._send(radio_id, "+++")
-
-        time.sleep(1.1)  # Wait before we send additional command
-        for radio_id, information in enumerate(self.radio_information):
+            time.sleep(1.1)  # Wait before we send additional command
             self._flushInput(radio_id)
             self._send(radio_id, "AT\r\n")
             result = self._readLine(radio_id)
@@ -88,8 +95,7 @@ class UsbRadios:
         for radio_id, configuration in enumerate(configurations):
             self.logger.info("Configuring radio %d with %s", radio_id, configuration)
             self._send(radio_id, "+++")
-        time.sleep(1.1)  # Wait before we send commands
-        for radio_id, configuration in enumerate(configurations):
+            time.sleep(1.1)  # Wait before we send commands
             self._flushInput(radio_id)
             self._send(radio_id, "AT\r\n")
             result = self._readLine(radio_id)
