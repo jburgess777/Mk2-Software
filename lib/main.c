@@ -2,6 +2,7 @@
 #include "uECC.h"
 #include <string>
 #include <stdlib.h>
+#include <stdexcept>
 
 int char2int(uint8_t input)
 {
@@ -11,7 +12,7 @@ int char2int(uint8_t input)
         return input - 'A' + 10;
     if(input >= 'a' && input <= 'f')
         return input - 'a' + 10;
-    throw "Invalid input string";
+    throw std::runtime_error("Invalid input string");
 }
 
 int main(int argc, char *argv[])
