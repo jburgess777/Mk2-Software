@@ -17,7 +17,7 @@ int char2int(uint8_t input)
 int main(int argc, char *argv[])
 {
     if (argc < 2) {
-        std::cerr << "Define mode: sign | verify | create";
+        std::cerr << "Define mode: sign | verify | create\n";
         return 1;
     }
 
@@ -49,7 +49,12 @@ int main(int argc, char *argv[])
 
 
     if (mode.compare("sign") == 0) {
-        std::string privateKeyAsHex(getenv("EMF_PRIVATE_KEY"));
+        char *private_key = getenv("EMF_PRIVATE_KEY");
+        if (!private_key) {
+          std::cerr << "Must set EMF_PRIVATE_KEY environment variable for signing\n";
+          return 1;
+        }
+        std::string privateKeyAsHex(private_key);
         for (int i=0; i<uECC_BYTES; i++) {
             l_private[i] = char2int(privateKeyAsHex[i * 2]) * 16 + char2int(privateKeyAsHex[i * 2 + 1]);
         }
@@ -90,7 +95,12 @@ int main(int argc, char *argv[])
     }
 
     if (mode.compare("verify") == 0) {
-        std::string publicKeyInHex(getenv("EMF_PUBLIC_KEY"));
+        char *public_key = getenv("EMF_PUBLIC_KEY");
+        if (!public_key) {
+          std::cerr << "Must set EMF_PUBLIC_KEY environment variable for verify\n";
+          return 1;
+        }
+        std::string publicKeyInHex(public_key);
         for (int i=0; i<uECC_BYTES * 2; i++) {
             l_public[i] = char2int(publicKeyInHex[i * 2]) * 16 + char2int(publicKeyInHex[i * 2 + 1]);
         }
@@ -127,6 +137,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    std::cerr << "Onvalid mode: sign | verify";
+    std::cerr << "Invalid mode: sign | verify | create\n";
     return 1;
 }
