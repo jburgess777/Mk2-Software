@@ -47,7 +47,12 @@ Query status of gateways:
     );
     CREATE UNIQUE INDEX hwid_uniq ON badge USING btree (hwid);
 
-
+    CREATE TABLE "user" (
+        name text,
+        nickname text,
+        badgeid text NOT NULL
+    );
+    CREATE UNIQUE INDEX badgeid_uniq ON "user" USING btree (badgeid);
 
 
 
