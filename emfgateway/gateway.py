@@ -60,7 +60,7 @@ class Gateway:
     def startReceiver(self):
         self.thread_receiver = threading.Thread(target=self.receiver)
         self.thread_receiver.setDaemon(True)
-        self.thread_receiver.setName('reveiver')
+        self.thread_receiver.setName('receiver')
         self.thread_receiver.start()
 
     def startTransmitter(self):
