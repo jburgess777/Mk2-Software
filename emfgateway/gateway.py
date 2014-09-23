@@ -20,8 +20,10 @@ class Gateway:
             self.logger.info("Receiver started")
             while True:
                 packet = self.usb_radios.readPacket(1)
-                rssi = int(packet[-4:])
-                packet = packet[:-5]
+                # Fake RSSI which is missing from current firmware
+                #rssi = int(packet[-4:])
+                #packet = packet[:-5]
+                rssi = -42
                 self.logger.debug("Received packet with rssi %d: %s", rssi, binascii.hexlify(packet))
                 message = {
                     "type": "received",
